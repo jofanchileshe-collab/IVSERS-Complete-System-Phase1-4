@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fleet Console - IVSERS</title>
+  <meta name="description" content="IVSERS live fleet safety operations console" />
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="dashboard.css?v=account-vehicle-crud-1" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+  <div id="toast-region" aria-live="polite"></div>
+
+  <div class="app-shell">
+    <!-- ==================== TOP BAR ==================== -->
+    <header class="topbar">
+      <div class="topbar-brand">
+        <div class="mark" aria-hidden="true">IV</div>
+        <div>
+          <div class="name">IVSERS</div>
+          <div class="sub">Fleet Safety Console</div>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <span class="conn-status offline" id="conn-status">
+          <span class="conn-dot"></span>
+          <span id="conn-label">Connecting...</span>
+        </span>
+        <span class="topbar-divider" aria-hidden="true"></span>
+        <span class="topbar-user">
+          <span id="user-name" class="mono">-</span>
+          <span id="user-role" class="badge badge--neutral">-</span>
+        </span>
+        <button class="btn-sm" id="logout-btn" type="button">Sign out</button>
+      </div>
+    </header>
+
+    <div class="role-summary" id="role-summary"></div>
+
+    <section class="management-tools" aria-label="Fleet and account management">
+      <details id="vehicle-registration" class="card management-card">
+        <summary>Add Vehicle</summary>
+        <p class="text-faint">Vehicle ID must exactly match VEHICLE_ID configured on the vehicle hardware.</p>
+        <form id="vehicle-form" class="management-form">
+          <label class="field">Vehicle ID<input name="vehicleId" required maxlength="80" /></label>
+          <label class="field">Registration / plate<input name="registrationNumber" /></label>
+          <label class="field">Make<input name="make" /></label>
+          <label class="field">Model<input name="model" /></label>
+          <label class="field">Year<input name="year" type="number" min="1900" max="2100" /></label>
+          <label class="field">Passenger capacity<input name="capacity" type="number" min="1" /></label>
+          <label class="field">Maximum load (kg)<input name="maxLoadKg" type="number" min="0" step="0.1" /></label>
+          <label class="field">Route<input name="route" /></label>
+          <label class="field">Depot<input name="depot" /></label>
+          <label class="field super-admin-only">Organization<input name="organization" /></label>
+          <label class="field">Vehicle owner<select name="owner"><option value="">Not assigned</option></select></label>
+          <label class="field">Assigned driver<select name="driver"><option value="">Not assigned</option></select></label>
+          <button class="primary" type="submit">Save vehicle</button>
+          <button id="vehicle-edit-cancel" class="btn-sm" type="button" hidden>Cancel edit</button>
+          <span id="vehicle-form-message" class="form-message" role="status"></span>
+        </form>
+      </details>
+
+      <details id="account-management" class="card management-card">
+        <summary>Staff & Accounts</summary>
+        <form id="account-form" class="management-form">
+          <label class="field">Name<input name="name" required /></label>
+          <label class="field">Email<input name="email" type="email" required /></label>
+          <label class="field">Phone<input name="phone" type="tel" /></label>
+          <label class="field">Organization<input name="organization" required /></label>
+          <label class="field">Role
+            <select name="role" required>
+              <option value="fleet_manager">Fleet manager</option>
+              <option value="driver">Driver</option>
+              <option value="bus_owner">Bus owner</option>
+              <option value="police">Police</option>
+              <option value="hospital">Hospital</option>
+              <option value="rtsa">RTSA</option>
+              <option value="fire_brigade">Fire brigade</option>
+              <option value="super_admin">Super administrator</option>
+            </select>
+          </label>
+          <label class="field">Initial password<input name="password" type="password" minlength="8" autocomplete="new-password" required /></label>
+          <button class="primary" type="submit">Create account</button>
+          <span id="account-form-message" class="form-message" role="status"></span>
+        </form>
+        <div class="panel-scroll">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Organization</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="account-table-body"><tr><td colspan="6" class="text-faint">Loading accounts...</td></tr></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <!-- ==================== FLEET STATUS STRIP (signature element) ==================== -->
+    <!-- A live "annunciator board": one segmented chip per vehicle, colored
+         by its current worst hazard state, laid out like a departures
+         board so an operator can read overall fleet health in one glance
+         without reading a single row of the table below it. -->
+    <section class="annunciator-wrap" aria-label="Fleet status overview">
+      <div class="annunciator" id="annunciator-strip">
+        <div class="annunciator-empty text-faint">No vehicles registered yet.</div>
+      </div>
+    </section>
+
+    <!-- ==================== MAIN GRID ==================== -->
+    <main class="main-grid">
+      <!-- Fleet table -->
+      <section class="card panel-col" aria-label="Fleet list">
+        <div class="panel-head">
+            <h2 id="fleet-heading">Fleet</h2>
+          <span class="text-faint mono" id="fleet-count">0 vehicles</span>
+        </div>
+        <div class="panel-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Vehicle</th>
+                <th>Status</th>
+                <th id="load-column">Load</th>
+                <th>Route</th>
+                <th>Last seen</th>
+                <th id="vehicle-actions-heading">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="fleet-table-body">
+              <tr><td colspan="6" class="text-faint">Loading fleet...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Live map -->
+      <section class="card panel-col map-col" aria-label="Live vehicle map">
+        <div class="panel-head">
+          <h2>Live map</h2>
+        </div>
+        <div id="fleet-map"></div>
+      </section>
+
+      <!-- Alert feed -->
+      <section class="card panel-col alert-col" aria-label="Live alert feed">
+        <div class="panel-head">
+          <h2>Alerts</h2>
+          <span class="text-faint mono" id="alert-count">0 pending</span>
+        </div>
+        <div class="panel-scroll" id="alert-feed">
+          <div class="text-faint" style="padding: 16px;">No alerts yet.</div>
+        </div>
+      </section>
+
+      <!-- Selected-vehicle telemetry readout -->
+      <section class="card panel-col telemetry-col" aria-label="Vehicle telemetry" id="telemetry-panel">
+        <div class="panel-head">
+          <h2>Telemetry</h2>
+          <span class="text-faint mono" id="telemetry-vehicle-id">select a vehicle</span>
+        </div>
+        <div class="panel-scroll" id="telemetry-body">
+          <div class="text-faint" style="padding: 16px;">
+            Select a vehicle from the Fleet table to view live sensor readings.
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Resolve-alert dialog -->
+  <dialog id="resolve-dialog">
+    <form method="dialog" id="resolve-form" class="stack gap-3" style="padding: 20px; min-width: 320px;">
+      <h3>Resolve alert</h3>
+      <div class="field">
+        <label for="resolution-notes">Resolution notes</label>
+        <textarea id="resolution-notes" rows="3"></textarea>
+      </div>
+      <label class="row gap-2" style="font-size: 13px;">
+        <input type="checkbox" id="false-alarm-checkbox" />
+        Mark as false alarm
+      </label>
+      <div class="row gap-2" style="justify-content: flex-end;">
+        <button type="button" class="btn-sm" id="resolve-cancel">Cancel</button>
+        <button type="submit" class="primary">Resolve</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="account-edit-dialog">
+    <form id="account-edit-form" class="management-form edit-dialog-form">
+      <h3>Edit account</h3>
+      <label class="field">Name<input name="name" required /></label>
+      <label class="field">Email<input name="email" type="email" required /></label>
+      <label class="field">Phone<input name="phone" type="tel" /></label>
+      <label class="field">Organization<input name="organization" /></label>
+      <label class="field">Role
+        <select name="role" required>
+          <option value="fleet_manager">Fleet manager</option>
+          <option value="driver">Driver</option>
+          <option value="bus_owner">Bus owner</option>
+          <option value="police">Police</option>
+          <option value="hospital">Hospital</option>
+          <option value="rtsa">RTSA</option>
+          <option value="fire_brigade">Fire brigade</option>
+          <option value="super_admin">Super administrator</option>
+        </select>
+      </label>
+      <span id="account-edit-message" class="form-message" role="status"></span>
+      <div class="row gap-2 edit-dialog-actions">
+        <button id="account-edit-cancel" class="btn-sm" type="button">Cancel</button>
+        <button class="primary" type="submit">Save changes</button>
+      </div>
+    </form>
+  </dialog>
+  <script src="../assets/config.js"></script>
+  <script src="../script.js?v=account-vehicle-crud-1"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="dashboard.js?v=account-vehicle-crud-1"></script>
+</body>
+</html>

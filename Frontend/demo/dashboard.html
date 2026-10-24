@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IVSERS - Simulated Demo</title>
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="demo.css?v=multi-fleet-2" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body class="demo-page">
+  <div class="demo-ribbon" role="status">SIMULATED DATA — NOT LIVE VEHICLE DATA</div>
+  <main class="demo-shell">
+    <header class="demo-header">
+      <div>
+        <p class="eyebrow">IVSERS demonstration console</p>
+        <h1>Fleet safety simulation</h1>
+        <label class="demo-persona-label" for="demo-persona">SIMULATED PERSONA (preview only)</label>
+        <select id="demo-persona" class="demo-persona">
+          <option value="super_admin">Super administrator</option>
+          <option value="fleet_manager" selected>Fleet manager</option>
+          <option value="driver">Driver</option>
+          <option value="bus_owner">Bus owner</option>
+          <option value="police">Police</option>
+          <option value="hospital">Hospital</option>
+          <option value="rtsa">RTSA</option>
+          <option value="fire_brigade">Fire brigade</option>
+        </select>
+        <p id="persona-description" class="text-faint">Fleet operations view. This preview does not create or authenticate a real account.</p>
+      </div>
+      <div class="demo-controls">
+        <span id="simulation-state" class="badge badge--neutral">Stopped</span>
+        <button id="start-simulation" class="primary" type="button">Start simulation</button>
+        <button id="stop-simulation" type="button" disabled>Stop simulation</button>
+        <button id="trigger-overload" class="warning-btn" type="button" disabled>Trigger overload warning</button>
+        <button id="trigger-temperature" class="danger-btn" type="button" disabled>Trigger high temperature</button>
+        <button id="trigger-accident" class="danger-btn" type="button" disabled>Trigger accident</button>
+        <button id="clear-alerts" type="button">Clear demo alerts</button>
+        <button id="exit-demo" type="button">Exit demo</button>
+      </div>
+    </header>
+
+    <p id="demo-error" class="demo-error" role="alert" hidden></p>
+
+    <section class="demo-grid" aria-label="Simulated fleet">
+      <article class="card demo-panel demo-fleet">
+        <div class="panel-heading">
+          <div><p class="eyebrow">SIMULATED DATA · Zambian fleet</p><h2>Vehicle status</h2></div>
+          <span id="fleet-count" class="badge badge--neutral">8 buses</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Vehicle / town</th><th>Route</th><th>Status</th><th>Speed</th><th>Load</th><th>Engine</th><th>Data source</th></tr></thead>
+            <tbody id="vehicle-list"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="card demo-panel demo-map-panel">
+        <div class="panel-heading"><div><p class="eyebrow">SIMULATED DATA · Zambia</p><h2>Fleet map</h2></div></div>
+        <div id="fleet-map" role="img" aria-label="Map showing simulated buses across Zambia"></div>
+        <p class="map-caption">Markers show generated locations across Zambia. Select a marker for route, status, and sample telemetry.</p>
+      </article>
+
+      <article class="card demo-panel demo-alert-panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">SIMULATED DATA · Generated incidents</p><h2>Alert feed</h2></div>
+          <span id="alert-count" class="badge badge--neutral">0</span>
+        </div>
+        <p id="no-alerts" class="text-faint">No simulated alerts.</p>
+        <ol id="alert-feed" class="demo-alerts" aria-live="polite"></ol>
+      </article>
+    </section>
+    <p class="demo-footnote">Every vehicle, location, reading, and alert on this page is simulated. Demo data stays in backend memory and never enters the real fleet database.</p>
+  </main>
+  <script src="../assets/config.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="demo.js?v=multi-fleet-2"></script>
+</body>
+</html>

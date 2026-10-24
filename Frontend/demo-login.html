@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IVSERS Simulated Demo</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="demo/demo.css" />
+</head>
+<body class="demo-page">
+  <main class="demo-login card card--bracketed">
+    <span class="demo-ribbon">SIMULATED DATA</span>
+    <p class="eyebrow">Demonstration access</p>
+    <h1>IVSERS Fleet Console</h1>
+    <p>This isolated demo uses generated readings only. No account or password is required, and no real vehicle or alert records are changed.</p>
+    <button class="primary" id="enter-demo" type="button">Enter demo</button>
+    <a href="login.html">Return to real sign in</a>
+  </main>
+  <script>
+    document.getElementById('enter-demo').addEventListener('click', () => {
+      sessionStorage.setItem('ivsers_demo_session', 'active');
+      window.location.href = 'demo/dashboard.html';
+    });
+  </script>
+</body>
+</html>

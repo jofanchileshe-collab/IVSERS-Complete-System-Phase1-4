@@ -1,0 +1,317 @@
+/*
+ * ============================================================================
+ *  IVSERS Frontend - dashboard/dashboard.css
+ *
+ *  Layout for the fleet console plus the signature "annunciator strip":
+ *  each vehicle gets a chip with four small segment lights (Fire /
+ *  Overload / Accident / Panic), lit and pulsing only when that specific
+ *  hazard is active - a direct visual echo of a real aircraft annunciator
+ *  panel, appropriate to the institution this system was built at, and
+ *  more informative than a single colored dot since an operator can tell
+ *  *which* hazard is active without reading the table below it.
+ * ============================================================================
+ */
+
+html, body { height: 100%; }
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* -------------------------------------------------------------------- */
+/* Top bar                                                                */
+/* -------------------------------------------------------------------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+  position: relative;
+  z-index: 2;
+}
+
+.topbar-brand { display: flex; align-items: center; gap: 12px; }
+.topbar-brand .mark {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--accent-dim);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--accent);
+}
+.topbar-brand .name { font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
+.topbar-brand .sub { font-size: 10px; color: var(--text-dim); letter-spacing: 0.04em; }
+
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.topbar-divider { width: 1px; height: 20px; background: var(--border); }
+.topbar-user { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+
+.role-summary {
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.management-tools { display: grid; gap: 12px; padding: 12px 24px 0; }
+.management-card { padding: 14px 16px; }
+.management-card summary {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.management-card > p { margin: 12px 0; font-size: 12px; }
+.management-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  align-items: end;
+  padding: 14px 0;
+}
+.management-form .field { gap: 6px; font-size: 11px; }
+.management-form input, .management-form select { width: 100%; min-width: 0; }
+.form-message { align-self: center; font-size: 12px; color: var(--text-secondary); }
+.form-message.error { color: var(--danger); }
+.super-admin-only[hidden] { display: none; }
+.edit-dialog-form { min-width: min(520px, 85vw); padding: 20px; }
+.edit-dialog-actions { grid-column: 1 / -1; justify-content: flex-end; }
+.management-form [hidden] { display: none; }
+.action-buttons { display: flex; gap: 6px; }
+.danger-btn.btn-sm { color: var(--danger); }
+
+/* -------------------------------------------------------------------- */
+/* Annunciator strip (signature element)                                 */
+/* -------------------------------------------------------------------- */
+.annunciator-wrap {
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-inset);
+  padding: 10px 24px;
+}
+
+.annunciator {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.annunciator-empty { font-size: 12px; padding: 8px 0; }
+
+.annunciator-chip {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 132px;
+  padding: 8px 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-bright);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+.annunciator-chip:hover { background: var(--bg-raised); }
+.annunciator-chip.selected { border-color: var(--accent-dim); }
+.annunciator-chip.state-critical { border-left-color: var(--danger); }
+.annunciator-chip.state-warning  { border-left-color: var(--warning); }
+.annunciator-chip.state-ok       { border-left-color: var(--safe); }
+.annunciator-chip.state-offline  { border-left-color: var(--text-dim); opacity: 0.6; }
+
+.annunciator-id {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.annunciator-segments { display: flex; gap: 4px; }
+
+.segment {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 2px 0;
+  border-radius: 2px;
+  background: var(--bg-inset);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+.segment.lit-danger  { background: rgba(228, 72, 58, 0.18); color: var(--danger); border-color: var(--danger); animation: seg-pulse 1.3s ease-in-out infinite; }
+.segment.lit-warning { background: rgba(245, 166, 35, 0.18); color: var(--warning); border-color: var(--warning); }
+
+@keyframes seg-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .segment.lit-danger { animation: none; }
+}
+
+/* -------------------------------------------------------------------- */
+/* Main grid                                                             */
+/* -------------------------------------------------------------------- */
+.main-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 360px 1fr 360px;
+  grid-template-rows: minmax(320px, 1fr) 260px;
+  gap: 16px;
+  padding: 16px 24px 24px;
+  min-height: 0;
+}
+
+.panel-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.map-col { grid-column: 2; grid-row: 1; }
+.alert-col { grid-column: 3; grid-row: 1; }
+.telemetry-col { grid-column: 1 / span 3; grid-row: 2; }
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.panel-head h2 {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+
+.panel-scroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+#fleet-map {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Leaflet renders inside a dark page; give the map container itself a
+   neutral base so tiles don't flash white while loading. */
+.leaflet-container { background: var(--bg-inset); }
+
+/* -------------------------------------------------------------------- */
+/* Alert feed                                                            */
+/* -------------------------------------------------------------------- */
+.alert-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.alert-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.alert-item-vehicle {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12px;
+}
+.alert-item-details { font-size: 12px; color: var(--text-secondary); }
+.alert-item-meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+}
+.alert-item-actions { display: flex; gap: 8px; margin-top: 4px; }
+
+/* -------------------------------------------------------------------- */
+/* Fleet table specifics                                                 */
+/* -------------------------------------------------------------------- */
+.fleet-vehicle-cell { display: flex; flex-direction: column; gap: 2px; }
+.fleet-vehicle-id { font-family: var(--font-mono); font-weight: 700; font-size: 12px; }
+.fleet-vehicle-route { font-size: 11px; color: var(--text-dim); }
+.load-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--bg-inset);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.load-bar-fill { height: 100%; background: var(--safe); transition: width 200ms ease, background-color 200ms ease; }
+.load-bar-fill.warn { background: var(--warning); }
+.load-bar-fill.over { background: var(--danger); }
+
+/* -------------------------------------------------------------------- */
+/* Telemetry readout                                                     */
+/* -------------------------------------------------------------------- */
+.readout-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  padding: 16px;
+}
+.readout-cell {
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+.readout-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.readout-value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.readout-value.danger { color: var(--danger); }
+.readout-value.warning { color: var(--warning); }
+.readout-value.safe { color: var(--safe); }
+
+/* -------------------------------------------------------------------- */
+/* Responsive                                                            */
+/* -------------------------------------------------------------------- */
+@media (max-width: 1180px) {
+  .management-tools { padding-left: 16px; padding-right: 16px; }
+  .main-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+  .map-col, .telemetry-col { grid-column: 1; grid-row: auto; }
+  #fleet-map { min-height: 320px; }
+}
+
+@media (max-width: 640px) {
+  .topbar { padding: 12px; }
+  .topbar-user span:not(.badge) { display: none; }
+  .main-grid { padding: 12px; }
+  .readout-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+}
